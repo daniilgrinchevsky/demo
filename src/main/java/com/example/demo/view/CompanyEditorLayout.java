@@ -93,7 +93,7 @@ public class CompanyEditorLayout extends HorizontalLayout {
 
         binder.forField(name).bind("name");
         binder.forField(address).bind("address");
-        binder.forField(tin).bind("tin");
+        binder.forField(tin).withNullRepresentation("").withConverter(new StringToLongConverter("Must be a number")).bind("tin");
         binder.forField(phone).bind("phone");
         binder.setBean(bean);
         save.addClickListener(e -> {
