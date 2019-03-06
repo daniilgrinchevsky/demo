@@ -23,7 +23,6 @@ public class Employee {
     private Company company;
 
     public Employee() {
-
     }
 
     public Employee(String name, String email, LocalDate birthday) {

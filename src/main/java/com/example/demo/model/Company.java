@@ -29,7 +29,6 @@ public class Company {
     private List<Employee> employees;
 
     public Company() {
-
     }
 
     public Company(String name, String address, Long tin, String phone) {

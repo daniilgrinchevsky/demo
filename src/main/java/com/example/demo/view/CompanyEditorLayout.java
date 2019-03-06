@@ -2,6 +2,9 @@ package com.example.demo.view;
 
 import com.example.demo.model.Company;
 import com.example.demo.service.CompanyService;
+import com.vaadin.data.Binder;
+import com.vaadin.data.converter.StringToBigIntegerConverter;
+import com.vaadin.data.converter.StringToLongConverter;
 import com.vaadin.shared.ui.ValueChangeMode;
 import com.vaadin.spring.annotation.SpringComponent;
 import com.vaadin.ui.*;
@@ -15,7 +18,9 @@ public class CompanyEditorLayout extends HorizontalLayout {
     private Button delete = new Button("Delete");
     private TextField filter = new TextField();
 
-    private Company companyEdit;
+    private Binder<Company> binder = new Binder<>(Company.class);
+
+    private Company bean = new Company();
 
     @Autowired
     private CompanyService companyService;
@@ -27,12 +32,12 @@ public class CompanyEditorLayout extends HorizontalLayout {
        // filter.addValueChangeListener();
         save.addClickListener(e -> saveCompany());
         edit.addClickListener(e -> {
-            if(companyEdit != null)
-            editCompany(companyEdit);
+            if(bean.getId() != null)
+            editCompany(bean);
         });
         delete.addClickListener(e -> {
-            if(companyEdit != null)
-            deleteCompany(companyEdit.getId());
+            if(bean.getId() != null)
+            deleteCompany();
         });
         addComponents(save, edit, delete, filter);
 
@@ -51,9 +56,17 @@ public class CompanyEditorLayout extends HorizontalLayout {
         tin.setPlaceholder("Tin");
         TextField phone = new TextField();
         phone.setPlaceholder("Phone number");
+        binder.forField(name).bind("name");
+        binder.forField(address).bind("address");
+        binder.forField(tin).withNullRepresentation("").withConverter(new StringToLongConverter("Must be a number")).bind("tin");
+        binder.forField(phone).bind("phone");
+        binder.setBean(bean);
+        name.clear();
+        address.clear();
+        tin.clear();
+        phone.clear();
         save.addClickListener(e -> {
-            companyService.create(
-                    new Company(name.getValue(), address.getValue(), Long.valueOf(tin.getValue()), phone.getValue()));
+            companyService.create(bean);
             Notification.show("Company successfully added", Notification.Type.TRAY_NOTIFICATION);
             name.clear();
             address.clear();
@@ -78,13 +91,14 @@ public class CompanyEditorLayout extends HorizontalLayout {
         TextField tin = new TextField();
         TextField phone = new TextField();
 
-        name.setValue(company.getName());
-        address.setValue(company.getAddress());
-        tin.setValue(company.getTin().toString());
-        phone.setValue(company.getPhone());
+        binder.forField(name).bind("name");
+        binder.forField(address).bind("address");
+        binder.forField(tin).bind("tin");
+        binder.forField(phone).bind("phone");
+        binder.setBean(bean);
         save.addClickListener(e -> {
-            Company updated = new Company(company.getId(), name.getValue(), address.getValue(), Long.valueOf(tin.getValue()), phone.getValue());
-            companyService.update(updated);
+            companyService.update(bean);
+            subWindow.close();
             Notification.show("Company successfully edited", Notification.Type.TRAY_NOTIFICATION);
             //TODO refresh data
         });
@@ -95,12 +109,12 @@ public class CompanyEditorLayout extends HorizontalLayout {
         getUI().addWindow(subWindow);
     }
 
-    public void deleteCompany(Integer id) {
-        companyService.delete(id);
+    public void deleteCompany() {
+        companyService.delete(bean.getId());
         Notification.show("Company successfully deleted", Notification.Type.TRAY_NOTIFICATION);
     }
 
-    public void setCompanyEdit(Company companyEdit) {
-        this.companyEdit = companyEdit;
+    public void setBean(Company bean) {
+        this.bean = bean;
     }
 }

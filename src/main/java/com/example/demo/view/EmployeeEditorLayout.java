@@ -3,14 +3,13 @@ package com.example.demo.view;
 import com.example.demo.model.Employee;
 import com.example.demo.service.EmployeeService;
 import com.vaadin.data.Binder;
-import com.vaadin.server.VaadinRequest;
+import com.vaadin.data.converter.StringToIntegerConverter;
 import com.vaadin.shared.ui.ValueChangeMode;
 import com.vaadin.spring.annotation.SpringComponent;
 import com.vaadin.ui.*;
 import org.springframework.beans.factory.annotation.Autowired;
 
 import java.time.LocalDate;
-import java.util.Set;
 
 @SpringComponent
 public class EmployeeEditorLayout extends HorizontalLayout {
@@ -24,8 +23,9 @@ public class EmployeeEditorLayout extends HorizontalLayout {
     @Autowired
     private EmployeeService employeeService;
 
-    private Employee employeeEdit;
+    private Binder<Employee> binder = new Binder<>(Employee.class);
 
+    private Employee bean = new Employee();
 
     @Autowired
     public void EmployeeEditorLayout() {
@@ -35,12 +35,12 @@ public class EmployeeEditorLayout extends HorizontalLayout {
       //  filter.addValueChangeListener();
         save.addClickListener(e -> saveEmployee());
         edit.addClickListener(e -> {
-            if(employeeEdit != null)
-            editEmployee(employeeEdit);
+            if(bean.getId() != null)
+            editEmployee();
         });
         delete.addClickListener(e -> {
-            if(employeeEdit != null)
-            deleteEmployee(employeeEdit.getId());
+            if(bean.getId() != null)
+            deleteEmployee();
         });
         addComponents(save, edit, delete, filter);
 
@@ -57,19 +57,23 @@ public class EmployeeEditorLayout extends HorizontalLayout {
         email.setPlaceholder("Email");
         DateField birthday = new DateField();
         birthday.setPlaceholder("Birth date");
-        birthday.setValue(LocalDate.now());
         TextField companyId = new TextField();
         companyId.setPlaceholder("Company ID");
+        binder.forField(name).bind("name");
+        binder.forField(email).bind("email");
+        binder.forField(birthday).bind("birthday");
+        binder.setBean(bean);
+        name.clear();
+        email.clear();
+        birthday.clear();
         save.addClickListener(e -> {
-            employeeService.create(
-                    new Employee(name.getValue(), email.getValue(), birthday.getValue()), Integer.valueOf(companyId.getValue()));
-                    Notification.show("User successfully added",Notification.Type.TRAY_NOTIFICATION);
-                    name.clear();
-                    email.clear();
-                    birthday.clear();
-                    companyId.clear();
+            employeeService.create(bean, Integer.valueOf(companyId.getValue()));
+            Notification.show("User successfully added",Notification.Type.TRAY_NOTIFICATION);
+            name.clear();
+            email.clear();
+            birthday.clear();
+            companyId.clear();
             //TODO refresh data
-
 
         });
         close.addClickListener(e -> subWindow.close());
@@ -79,7 +83,7 @@ public class EmployeeEditorLayout extends HorizontalLayout {
         getUI().addWindow(subWindow);
     }
 
-    public void editEmployee(Employee employee){
+    public void editEmployee(){
         Window subWindow = new Window("Edit employee");
         HorizontalLayout editEmployee = new HorizontalLayout();
         Button save = new Button("Save");
@@ -88,13 +92,14 @@ public class EmployeeEditorLayout extends HorizontalLayout {
         TextField email = new TextField();
         DateField birthday = new DateField();
         TextField companyId = new TextField();
-        name.setValue(employee.getName());
-        email.setValue(employee.getEmail());
-        birthday.setValue(employee.getBirthday());
-        companyId.setValue(employee.getCompany().getId().toString());
+        companyId.setValue(bean.getCompany().getId().toString());
+        binder.forField(name).bind("name");
+        binder.forField(email).bind("email");
+        binder.forField(birthday).bind("birthday");
+        binder.setBean(bean);
         save.addClickListener(e -> {
-            Employee updated = new Employee(employee.getId(), name.getValue(), email.getValue(), birthday.getValue());
-            employeeService.update(updated, Integer.valueOf(companyId.getValue()));
+            employeeService.update(bean, Integer.valueOf(companyId.getValue()));
+            subWindow.close();
                     Notification.show("User successfully edited", Notification.Type.TRAY_NOTIFICATION);
                     //TODO refresh data
         });
@@ -105,12 +110,12 @@ public class EmployeeEditorLayout extends HorizontalLayout {
         getUI().addWindow(subWindow);
     }
 
-    public void deleteEmployee(Integer id){
-        employeeService.delete(id);
+    public void deleteEmployee() {
+        employeeService.delete(bean.getId());
         Notification.show("User successfully deleted", Notification.Type.TRAY_NOTIFICATION);
     }
 
-    public void setEmployeeEdit(Employee employeeEdit) {
-        this.employeeEdit = employeeEdit;
+    public void setBean(Employee bean) {
+        this.bean = bean;
     }
 }

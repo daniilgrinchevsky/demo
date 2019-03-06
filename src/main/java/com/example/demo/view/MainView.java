@@ -5,16 +5,13 @@ import com.example.demo.model.Company;
 import com.example.demo.model.Employee;
 import com.example.demo.service.CompanyService;
 import com.example.demo.service.EmployeeService;
-import com.vaadin.data.Binder;
 import com.vaadin.server.VaadinRequest;
-import com.vaadin.shared.ui.ValueChangeMode;
 import com.vaadin.spring.annotation.SpringUI;
-import com.vaadin.ui.*;
-import com.vaadin.ui.components.grid.SingleSelectionModel;
+import com.vaadin.ui.Grid;
+import com.vaadin.ui.TabSheet;
+import com.vaadin.ui.UI;
+import com.vaadin.ui.VerticalLayout;
 import org.springframework.beans.factory.annotation.Autowired;
-
-import java.time.LocalDate;
-import java.util.List;
 
 @SpringUI
 public class MainView extends UI {
@@ -68,7 +65,6 @@ public class MainView extends UI {
     }
 
     public void addEmployees() {
-        employeeGrid.setSelectionMode(Grid.SelectionMode.SINGLE);
         employeeGrid.setItems(employeeService.getAll());
         employeeGrid.setColumnOrder("id", "name", "email", "birthday", "company");
         employeeGrid.getColumns().forEach(c->c.setResizable(false));
@@ -76,12 +72,11 @@ public class MainView extends UI {
         employees.addComponentsAndExpand(employeeGrid);
         employeeGrid.addSelectionListener(e -> {
             Employee employee = e.getFirstSelectedItem().get();
-            employeeEditorLayout.setEmployeeEdit(employee);
+            employeeEditorLayout.setBean(employee);
         });
     }
 
     public void addCompanies() {
-        employeeGrid.setSelectionMode(Grid.SelectionMode.SINGLE);
         companyGrid.setItems(companyService.getAll());
         companyGrid.getColumn("employees").setHidden(true);
         companyGrid.setColumnOrder("id", "name", "address", "tin", "phone");
@@ -90,7 +85,7 @@ public class MainView extends UI {
         companies.addComponentsAndExpand(companyGrid);
         companyGrid.addSelectionListener(e -> {
            Company company = e.getFirstSelectedItem().get();
-           companyEditorLayout.setCompanyEdit(company);
+           companyEditorLayout.setBean(company);
         });
     }
 
